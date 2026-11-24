@@ -1,21 +1,13 @@
 {
-  "name": "trabajo_final_integrador_pdep2026",
-  "version": "1.0.0",
-  "description": "TP integrador Paradigmas de Programación - Gestor de tareas",
-  "main": "dist/index.js",
-  "type": "module",
-  "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "tsx src/index.ts"
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
-  "dependencies": {
-    "readline-sync": "^1.4.10"
-  },
-  "devDependencies": {
-    "@types/node": "^22.0.0",
-    "@types/readline-sync": "^1.4.7",
-    "tsx": "^4.19.0",
-    "typescript": "^5.7.0"
-  }
+  "include": ["src"]
 }

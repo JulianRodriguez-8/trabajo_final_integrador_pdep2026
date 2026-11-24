@@ -1,18 +1,4 @@
-import { randomUUID } from "node:crypto"; // Importa randomUUID del módulo nativo crypto de Node para generar IDs únicos
-
-export type EstadoTarea = "Pendiente" | "En curso" | "Terminada" | "Cancelada"; // Define los únicos valores permitidos para el estado
-export type DificultadTarea = "Fácil" | "Media" | "Difícil"; // Define los únicos valores permitidos para la dificultad
-
-export interface DatosTarea { // Contrato de tipos para los datos que se pasan al crear una tarea
-    titulo: string; // Título obligatorio de tipo string
-    descripcion?: string | null; // Descripción opcional; puede ser string o null
-    estado?: EstadoTarea; // Estado opcional; si viene, debe ser uno de EstadoTarea
-    vencimiento?: string | null; // Vencimiento opcional; puede ser string o null
-    dificultad?: DificultadTarea; // Dificultad opcional; si viene, debe ser una de DificultadTarea
-    creacion?: Date; // Fecha de creación opcional de tipo Date
-    ultimaEdicion?: Date; // Fecha de última edición opcional de tipo Date
-    eliminada?: boolean; // Bandera opcional para eliminación lógica (soft delete)
-}
+import type { DatosTarea, EstadoTarea, DificultadTarea,CambiosTarea} from "./Tipos.js"; // (corregido) Importa solo tipos desde tipos.ts; ya no se importa randomUUID
 
 export class Tarea { // Declara la clase Tarea en POO basada en clases
     readonly id: string; // ID único (UUID); readonly evita reasignarlo desde afuera
@@ -26,7 +12,7 @@ export class Tarea { // Declara la clase Tarea en POO basada en clases
     readonly eliminada: boolean; // true si está dada de baja lógicamente, false si está activa
 
     constructor(datos: DatosTarea) { // Se ejecuta al hacer new Tarea(datos)
-        this.id = randomUUID(); // Genera un UUID nuevo automáticamente en cada instancia creada
+        this.id = datos.id; // (corregido) Conserva el id recibido; no genera ninguno
         this.titulo = datos.titulo; // Asigna el título recibido
         this.descripcion = datos.descripcion ?? null; // Si datos.descripcion es null/undefined, usa null
         this.estado = datos.estado ?? "Pendiente"; // Si no viene estado, usa "Pendiente" por defecto
@@ -37,29 +23,28 @@ export class Tarea { // Declara la clase Tarea en POO basada en clases
         this.eliminada = datos.eliminada ?? false; // Si no viene eliminada, empieza en false (activa)
     }
 
-    marcarEliminada(): Tarea { // Método que devuelve una Tarea marcada como eliminada sin mutar esta
+       marcarEliminada(ahora: Date): Tarea { // Recibe la fecha actual desde afuera: ya no depende del reloj del sistema
         if (this.eliminada) { // Si ya estaba eliminada lógicamente
-            return this; // Devuelve esta misma instancia y no hace nada más
+            return this; // Devuelve la misma instancia (esto hace la operación idempotente)
         }
-        return new Tarea({ // Crea y devuelve una NUEVA instancia de Tarea
-            ...this, // Copia todas las propiedades de la instancia actual
-            ultimaEdicion: new Date(), // Sobrescribe ultimaEdicion con la fecha actual
-            eliminada: true // Sobrescribe eliminada a true (baja lógica)
+        return new Tarea({ // Crea una NUEVA instancia, sin mutar esta
+            ...this, // Copia todas las propiedades actuales (incluido el id)
+            ultimaEdicion: ahora, // Usa la fecha recibida en lugar de new Date(): mismo input, mismo resultado
+            eliminada: true // Baja lógica (soft delete)
         });
     }
 
-    actualizar(cambios: Partial<Pick<DatosTarea, "titulo" | "descripcion" | "estado" | "vencimiento" | "dificultad">>): Tarea { // Recibe cambios parciales de esos 5 campos y devuelve una Tarea
-        if (this.eliminada) { // Si la tarea ya fue eliminada lógicamente
-            return this; // No permite editarla y devuelve la misma instancia
+  actualizar(
+        cambios: CambiosTarea, // Tipo con nombre: una sola fuente de verdad (antes era Partial<Pick<...>> inline)
+        ahora: Date // Fecha inyectada por quien llama
+    ): Tarea {
+        if (this.eliminada) { // Una tarea eliminada no se edita
+            return this; // Devuelve la misma instancia
         }
-        return new Tarea({ // Crea y devuelve una NUEVA instancia de Tarea con los cambios aplicados
-            ...this, // Copia los valores actuales de esta tarea
-            ...cambios, // Piso solo los campos que vinieron en "cambios"
-            ultimaEdicion: new Date() // Actualiza la fecha de última edición al momento actual
+        return new Tarea({
+            ...this, // Conserva valores actuales (incluido el id)
+            ...cambios, // Pisa solo los campos recibidos
+            ultimaEdicion: ahora // Fecha inyectada
         });
-    }
-
-    estaActiva(): boolean { // Método de consulta que indica si la tarea no está eliminada
-        return !this.eliminada; // Devuelve true si eliminada es false; false si eliminada es true
     }
 }
