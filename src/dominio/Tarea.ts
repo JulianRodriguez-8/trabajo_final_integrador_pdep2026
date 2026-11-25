@@ -47,4 +47,8 @@ export class Tarea { // Declara la clase Tarea en POO basada en clases
             ultimaEdicion: ahora // Fecha inyectada
         });
     }
+    
+     estaActiva(): boolean {      // ← pegalo acá
+        return !this.eliminada;
+    }
 }

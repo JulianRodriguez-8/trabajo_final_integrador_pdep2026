@@ -50,3 +50,12 @@ export const eliminarTarea = (
             ? tarea.actualizar(cambios, ahora) // Sí: la propia Tarea decide cómo aplicar los cambios
             : tarea // No: se conserva igual
     );
+
+  export const filtrarActivas = (
+    tareas: readonly Tarea[] // Lista de solo lectura: promete no mutarla
+): readonly Tarea[] => // Devuelve otra lista de solo lectura, misma inmutabilidad que la entrada
+    tareas.filter( // filter recorre la lista y devuelve una NUEVA con solo los elementos que dan true
+        tarea => tarea.estaActiva() // Para cada tarea pregunta "¿estás activa?": true = se queda, false = se descarta
+    );
+
+    
