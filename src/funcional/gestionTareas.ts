@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto"; // Trae la función que genera UUIDs (único punto impuro del módulo)
-import type { DatosTarea,CambiosTarea} from "../dominio/Tipos.js"; // Solo tipo: desaparece al compilar. Ojo: el nombre del archivo debe coincidir con el real (tipos / Tipos)
+import type { DatosTarea, CambiosTarea } from "../dominio/Tipos.js"; // Solo tipo: desaparece al compilar. Ojo: el nombre del archivo debe coincidir con el real (tipos / Tipos)
 import { Tarea } from "../dominio/Tarea.js"; // Import normal: la clase se usa con "new" en ejecución
+import { pipe } from "./composicion.js";
+import { ordenarTareas,Comparador } from "./Ordenamiento.js";
+
 
 // Lo que devuelve agregarTarea: dos cosas juntas en un objeto
 export interface ResultadoAgregar {
@@ -39,7 +42,7 @@ export const eliminarTarea = (
             : tarea // No: se conserva igual (misma referencia)
     );
 
-   export const editarTarea = (
+export const editarTarea = (
     tareas: readonly Tarea[], // Lista de solo lectura
     id: string, // Id de la tarea a editar
     cambios: CambiosTarea, // Cambios parciales
@@ -51,11 +54,21 @@ export const eliminarTarea = (
             : tarea // No: se conserva igual
     );
 
-  export const filtrarActivas = (
+export const filtrarActivas = (
     tareas: readonly Tarea[] // Lista de solo lectura: promete no mutarla
 ): readonly Tarea[] => // Devuelve otra lista de solo lectura, misma inmutabilidad que la entrada
     tareas.filter( // filter recorre la lista y devuelve una NUEVA con solo los elementos que dan true
         tarea => tarea.estaActiva() // Para cada tarea pregunta "¿estás activa?": true = se queda, false = se descarta
     );
 
-    
+// Devuelve las tareas listas para mostrar: primero saco las eliminadas, después ordeno
+export const obtenerTareasParaMostrar = (
+    tareas: readonly Tarea[],            // todas las tareas, incluidas las eliminadas
+    comparador: Comparador               // el criterio de orden (porTitulo, porDificultad...)
+): readonly Tarea[] =>
+    pipe(
+        tareas,                          // con qué arranco: todas las tareas
+        filtrarActivas,                  // máquina 1: saca las eliminadas
+        lista => ordenarTareas(lista, comparador) // máquina 2: ordena lo que quedó
+    );
+
