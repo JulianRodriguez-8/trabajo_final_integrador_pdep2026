@@ -1,6 +1,8 @@
+// Importo el molde del que voy a heredar
 import { Dificultad } from "./Dificultad.js";
 
-export class Media extends Dificultad {   // "extends" = hereda del molde
-    readonly nombre = "Media";            // completa lo que el molde exige
-    readonly peso = 1;
+// Media también hereda de Dificultad: mismo molde, distintos valores
+export class Media extends Dificultad {
+    readonly nombre = "Media";   // su nombre
+    readonly peso = 2;           // pesa 2: queda en el medio
 }
